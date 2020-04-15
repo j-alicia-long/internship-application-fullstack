@@ -11,7 +11,7 @@
  */
 const COOKIE_NAME = '__url'
 async function handleRequest(request) {
-  // try {
+  try {
     // Fetch url list from given endpoint
     let url = 'https://cfw-takehome.developers.workers.dev/api/variants';
     let urlResponse = await fetch(url);
@@ -19,32 +19,34 @@ async function handleRequest(request) {
     let urlList = json.variants;
 
     var urlIndex;
+    var pageResponse;
+
+    // Check if user has visited site before
     const cookie = getCookie(request, COOKIE_NAME)
     if (cookie) {
-      // Get chosen url from cookie
+      // Get selected url from cookie
       urlIndex = cookie
-      console.log(urlIndex)
       // Fetch content from chosen URL
-      let pageResponse = await fetch(urlList[urlIndex]);
+      pageResponse = await fetch(urlList[urlIndex]);
     }
-    else {
-      // Select random URL
+    else { // No cookie set
+      // Select a random URL
       urlIndex = Math.random() < 0.5 ? 0 : 1 // 50/50 split
       // Fetch content from chosen URL
       let res = await fetch(urlList[urlIndex]);
       // Save chosen URL as cookie for user
-      var pageResponse = new Response(res.body, res);
+      pageResponse = new Response(res.body, res);
       pageResponse.headers.append('Set-Cookie', `__url=${urlIndex}`)
     }
     // Return content to client
     return rewriter.transform(pageResponse);
 
-  // } catch (e) {
-  //   console.error(e);
-  //   return new Response('The site is experiencing issues, try again later!', {
-  //     headers: { 'content-type': 'text/plain' },
-  //   });
-  // }
+  } catch (e) {
+    console.error(e);
+    return new Response('The site is experiencing issues, try again later!', {
+      headers: { 'content-type': 'text/plain' },
+    });
+  }
 }
 
 
@@ -63,7 +65,7 @@ class AttributeRewriter {
       element.setInnerContent("Hi, I'm Jennifer!")
     }
     else if (this.elementName == 'p#description') {
-      element.setInnerContent("This is my take-home project")
+      element.setInnerContent("This is my take-home project, with HTMLRewriter and persisting variants.")
     }
     else if (this.elementName == 'a#url') {
       const attribute = element.getAttribute(this.attributeName)
