@@ -1,0 +1,19 @@
+# wrangler.toml
+
+# The name of your Workers application
+name = "cf-workers-demo"
+
+# Your Cloudflare account ID
+account_id = "826f30445e89eff0013f3f89ca9229ae"
+
+# The kind of application you're deploying to Cloudflare
+type = "javascript"
+
+# Publish to workers.dev by default
+workers_dev = true
+
+# [env.production]
+# # The ID of your domain you're deploying to
+# zone_id = ""
+# # The route pattern your Workers application will be served at
+# route = ""
