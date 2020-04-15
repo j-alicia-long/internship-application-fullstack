@@ -1,39 +1,54 @@
 /**
- * Jennifer Long
- * Full-Stack Software Engineer Intern
+  * Jennifer Long
+  * Full-Stack Software Engineer Intern
+  * Project requirements + Extra credit 1 & 2
  */
+
 
 /**
  * Respond with one of two variant html pages
  * @param {Request} request
  */
+const COOKIE_NAME = '__url'
 async function handleRequest(request) {
-  try {
+  // try {
     // Fetch url list from given endpoint
     let url = 'https://cfw-takehome.developers.workers.dev/api/variants';
-    let response = await fetch(url);
-    let json = await response.json();
+    let urlResponse = await fetch(url);
+    let json = await urlResponse.json();
     let urlList = json.variants;
 
-    // Select random URL
-    var randomIndex = Math.round(Math.random());
-    var randomUrl = urlList[randomIndex];
-
-    // Fetch content from chosen URL
-    let response2 = await fetch(randomUrl);
-
+    var urlIndex;
+    const cookie = getCookie(request, COOKIE_NAME)
+    if (cookie) {
+      // Get chosen url from cookie
+      urlIndex = cookie
+      console.log(urlIndex)
+      // Fetch content from chosen URL
+      let pageResponse = await fetch(urlList[urlIndex]);
+    }
+    else {
+      // Select random URL
+      urlIndex = Math.random() < 0.5 ? 0 : 1 // 50/50 split
+      // Fetch content from chosen URL
+      let res = await fetch(urlList[urlIndex]);
+      // Save chosen URL as cookie for user
+      var pageResponse = new Response(res.body, res);
+      pageResponse.headers.append('Set-Cookie', `__url=${urlIndex}`)
+    }
     // Return content to client
-    return rewriter.transform(response2);
+    return rewriter.transform(pageResponse);
 
-  } catch (e) {
-    console.error(e);
-    return new Response('The site is experiencing issues, try again later!', {
-      headers: { 'content-type': 'text/plain' },
-    });
-  }
+  // } catch (e) {
+  //   console.error(e);
+  //   return new Response('The site is experiencing issues, try again later!', {
+  //     headers: { 'content-type': 'text/plain' },
+  //   });
+  // }
 }
 
-// Extra Credit: Uses HTMLRewriter API to replace html attributes
+
+// Extra Credit 1: Uses HTMLRewriter API to replace html attributes
 
 class AttributeRewriter {
   constructor(elementName, attributeName) {
@@ -69,6 +84,28 @@ const rewriter = new HTMLRewriter()
   .on('p#description', new AttributeRewriter('p#description', ''))
   .on('a#url', new AttributeRewriter('a#url', 'href'));
 
+
+// Extra Credit 2: Save chosen url for user as cookie
+/**
+ * Grabs the cookie with name from the request headers
+ * @param {Request} request incoming Request
+ * @param {string} name of the cookie to grab
+ */
+function getCookie(request, name) {
+  let result = null
+  let cookieString = request.headers.get('Cookie')
+  if (cookieString) {
+    let cookies = cookieString.split(';')
+    cookies.forEach(cookie => {
+      let cookieName = cookie.split('=')[0].trim()
+      if (cookieName === name) {
+        let cookieVal = cookie.split('=')[1]
+        result = cookieVal
+      }
+    })
+  }
+  return result
+}
 
 
 addEventListener('fetch', event => {
